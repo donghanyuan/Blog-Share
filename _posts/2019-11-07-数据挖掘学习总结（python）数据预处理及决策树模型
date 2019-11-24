@@ -11,16 +11,15 @@ tags:
     - 数据预处理
 ---
 
-数据挖掘学习总结（以titanic数据集为例）
+#数据挖掘学习总结（以titanic数据集为例）
 
-一.Decision Tree模型
+##一.Decision Tree模型
 
-1.具体代码：
+###1.具体代码：
 
-# -*- coding:utf-8 -*-
-#  Decision Tree在Titanic数据集上的结果
-
-# 使用了 DTC 的参数搜索方法，选取参数‘criterion’和‘max_depth’
+-*- coding:utf-8 -*-
+####Decision Tree在Titanic数据集上的结果
+####使用了 DTC 的参数搜索方法，选取参数‘criterion’和‘max_depth’
 
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier as DTC, export_graphviz
@@ -36,7 +35,7 @@ Y = data.iloc[:, 1]
 
 X_train,X_test,Y_train,Y_test = model_selection.train_test_split(X,Y,test_size=0.3,random_state=1234)
 
-#待搜索的参数
+####待搜索的参数
 parameters={
             'criterion':['gini','entropy'],
             'max_depth':[1,2,3,4,5,6,7,8,9,10]
@@ -46,10 +45,10 @@ dtree=DTC()
 grid_search=GridSearchCV(dtree,parameters,scoring='accuracy',cv=5)
 grid_search.fit(X_train,Y_train)
 
-best_para= grid_search.best_params_  #获取最优的训练参数
+best_para= grid_search.best_params_  ####获取最优的训练参数
 
 start= time.clock()
-# 训练决策树
+####训练决策树
 dtc=DTC(criterion=best_para['criterion'], max_depth= best_para['max_depth'])
 dtc=dtc.fit(X_train,Y_train)
 Y_test_predict= dtc.predict(X_test)
@@ -60,89 +59,89 @@ print('训练准确率：', dtc.score(X_train,Y_train))
 print('测试准确率：', dtc.score(X_test,Y_test))
 print('训练时间：', str(end-start))
 
-# 可视化决策树，导出结果是一个dot文件，需要安装Graphviz才能转换为.pdf或.png格式
+####可视化决策树，导出结果是一个dot文件，需要安装Graphviz才能转换为.pdf或.png格式
 with open('tmp/tree.dot', 'w') as f:
     f = export_graphviz(dtc, feature_names=X.columns, out_file=f)
 
 
-#预测的类别
+####预测的类别
 Y_test_predict= dtc.predict(X_test)
 
-# F1,Precision,Recall评价指标的计算
+####F1,Precision,Recall评价指标的计算
 print('F1-score的值：', f1_score(Y_test, Y_test_predict,average='binary'))
 print('Precision的值：',precision_score(Y_test, Y_test_predict,average='binary'))
 print('Recall的值：',recall_score(Y_test, Y_test_predict,average='binary'))
 
 
-#正类样本和负类样本分类正确率的计算方法
+####正类样本和负类样本分类正确率的计算方法
 
-# 统计正类（survive=1)样本被错误预测的个数， 和  负类样本（survive=0）被错误预测  的个数
+####统计正类（survive=1)样本被错误预测的个数， 和  负类样本（survive=0）被错误预测  的个数
 diff=np.array(Y_test)-Y_test_predict
 err_pos = sum(diff==1)
 err_neg= sum(diff==-1)
 
-#测试样本中，正类和负类样本数
+####测试样本中，正类和负类样本数
 n_pos= sum(np.array(Y_test)==1)
 n_neg=sum(np.array(Y_test)==0)
 
-#每一类样本的分类正确率
+####每一类样本的分类正确率
 print("正类样本的分类正确率", 1-err_pos/n_pos)
 print("负类样本的分类正确率", 1-err_neg/n_neg)
 
-总结：1.估计正类和负类样本正确率时，此方法适用于正负类样本数量偏差不大的情况，若样本数量偏差大，则得出的正确率对此模型无参考作用。（参考100人里有1人患癌的例子）
+#总结：1.估计正类和负类样本正确率时，此方法适用于正负类样本数量偏差不大的情况，若样本数量偏差大，则得出的正确率对此模型无参考作用。（参考100人里有1人患癌的例子）
 2.正类被预测错时，diff=1-0=1，负类被预测错时：diff=0-1=-1
 
 
-2.数据预处理部分代码：
+##2.数据预处理部分代码：
 
-（1）缺失值的处理
+###（1）缺失值的处理
 
-a.拉格朗日插值法（这里以某销售数据为例）
+####a.拉格朗日插值法（这里以某销售数据为例）
 
-import pandas as pd #导入数据分析库Pandas
-from scipy.interpolate import lagrange #导入拉格朗日插值函数
+import pandas as pd ####导入数据分析库Pandas
+from scipy.interpolate import lagrange ####导入拉格朗日插值函数
 
-inputfile = 'catering_sale.xls' #销量数据路径
-outputfile = 'sales_interp.xls' #输出数据路径
+inputfile = 'catering_sale.xls' ####销量数据路径
+outputfile = 'sales_interp.xls' ####输出数据路径
 
-data = pd.read_excel(inputfile) #读入数据
-#data[u'销量'][(data[u'销量'] < 400) | (data[u'销量'] > 5000)] = None #过滤异常值，将其变为空值
+data = pd.read_excel(inputfile) ####读入数据
+####data[u'销量'][(data[u'销量'] < 400) | (data[u'销量'] > 5000)] = None ####过滤异常值，将其变为空值
 data.loc[data[u'销量']<400, [u'销量'] ]=None
 data.loc[data[u'销量']>5000, [u'销量'] ]=None
-#自定义列向量插值函数
-#s为列向量，n为被插值的位置，k为取前后的数据个数，默认为5
+####自定义列向量插值函数
+####s为列向量，n为被插值的位置，k为取前后的数据个数，默认为5
 def ployinterp_column(s, n, k=5):
-  y = s[list(range(n-k, n)) + list(range(n+1, n+1+k))] #取数
-  y = y[y.notnull()] #剔除空值
-  return lagrange(y.index, list(y))(n) #拉格朗日插值并返回插值结果
+  y = s[list(range(n-k, n)) + list(range(n+1, n+1+k))] ####取数
+  y = y[y.notnull()] ####剔除空值
+  return lagrange(y.index, list(y))(n) ####拉格朗日插值并返回插值结果
 
-#逐个元素判断是否需要插值
+####逐个元素判断是否需要插值
 for j in range(len(data)):
-   if (data['销量'].isnull())[j]: #如果为空即插值。
+   if (data['销量'].isnull())[j]: ####如果为空即插值。
       data['销量'][j] = ployinterp_column(data['销量'], j)
 
-data.to_excel(outputfile) #输出结果，写入文件
+data.to_excel(outputfile) ####输出结果，写入文件
 
-b.均值插值
+####b.均值插值
 
-#自定义列向量插值函数
-#s为列向量，n为被插值的位置，k为取前后的数据个数，默认为5
+####自定义列向量插值函数
+####s为列向量，n为被插值的位置，k为取前后的数据个数，默认为5
 def ployinterp_column(s, n, k=5):
-  y = s[list(range(n-k, n))+ list(range(n+1, n+1+k)) ] #取数
-  y = y[y.notnull()] #剔除空值
-  return y.mean() # 用前后k个邻居的均值作为估计的插值。
+  y = s[list(range(n-k, n))+ list(range(n+1, n+1+k)) ] ####取数
+  y = y[y.notnull()] ####剔除空值
+  return y.mean() ####用前后k个邻居的均值作为估计的插值。
   
-（2）异常值检查（这里以鸢尾花数据集为例）
+###（2）异常值检查（这里以鸢尾花数据集为例）
 
 import pandas as pd
-import matplotlib.pyplot as plt #导入图像库
+import matplotlib.pyplot as plt ####导入图像库
 
 iris = 'iris.cvs'
 data = pd.read_csv('iris.csv', encoding='utf-8')
 data=data.iloc[:,1:2]
 
-plt.figure() #建立图像
-p = data.boxplot(return_type='dict') #画箱线图，直接使用DataFrame的方法
+plt.figure() ####建立图像
+p = data.boxplot(return_type='dict') ####画箱线图，直接使用DataFrame的方法
 
-plt.show() #展示箱线图
+plt.show() ####展示箱线图
 
